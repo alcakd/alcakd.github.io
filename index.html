@@ -89,6 +89,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             background: white;
+            user-select: none;
         }
 
         .radio-option:hover {
@@ -106,6 +107,7 @@
             width: 18px;
             height: 18px;
             cursor: pointer;
+            pointer-events: none;
         }
 
         .radio-option label {
@@ -113,6 +115,7 @@
             cursor: pointer;
             flex: 1;
             font-size: 15px;
+            pointer-events: none;
         }
 
         .manual-date-input {
@@ -335,19 +338,19 @@
             <div class="form-group">
                 <label>Years of Service</label>
                 <div class="seniority-options">
-                    <div class="radio-option" onclick="selectSeniority('lessThan5')">
+                    <div class="radio-option" data-value="lessThan5">
                         <input type="radio" name="seniority" value="lessThan5" id="lessThan5">
                         <label for="lessThan5">Less than 5 years (1.67 days/month)</label>
                     </div>
-                    <div class="radio-option" onclick="selectSeniority('fiveToTwentyFour')">
+                    <div class="radio-option" data-value="fiveToTwentyFour">
                         <input type="radio" name="seniority" value="fiveToTwentyFour" id="fiveToTwentyFour">
                         <label for="fiveToTwentyFour">5 to 24 years (2.08 days/month)</label>
                     </div>
-                    <div class="radio-option" onclick="selectSeniority('twentyFivePlus')">
+                    <div class="radio-option" data-value="twentyFivePlus">
                         <input type="radio" name="seniority" value="twentyFivePlus" id="twentyFivePlus">
                         <label for="twentyFivePlus">25+ years (2.5 days/month)</label>
                     </div>
-                    <div class="radio-option" onclick="selectSeniority('manual')">
+                    <div class="radio-option" data-value="manual">
                         <input type="radio" name="seniority" value="manual" id="manual">
                         <label for="manual">Enter enrollment date manually</label>
                     </div>
@@ -466,17 +469,27 @@
     </div>
 
     <script>
-        function selectSeniority(option) {
-            // Update radio button selection
-            const radioOptions = document.querySelectorAll('.radio-option');
-            radioOptions.forEach(opt => opt.classList.remove('selected'));
+        function updateSenioritySelection(selectedValue) {
+            // First, update the radio button state
+            const allRadios = document.querySelectorAll('input[name="seniority"]');
+            allRadios.forEach(radio => {
+                radio.checked = (radio.value === selectedValue);
+            });
             
-            const selectedOption = event.currentTarget;
-            selectedOption.classList.add('selected');
+            // Then update the visual selection
+            const radioOptions = document.querySelectorAll('.radio-option');
+            radioOptions.forEach(option => {
+                const radio = option.querySelector('input[type="radio"]');
+                if (radio.checked) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
             
             // Show/hide manual date input
             const manualDateInput = document.getElementById('manualDateInput');
-            if (option === 'manual') {
+            if (selectedValue === 'manual') {
                 manualDateInput.classList.add('show');
             } else {
                 manualDateInput.classList.remove('show');
@@ -800,9 +813,17 @@
               input.addEventListener('change', autoCalculateIfReady);
             });
             
-            // Add event listeners for seniority radio buttons
-            document.querySelectorAll('input[name="seniority"]').forEach(radio => {
-              radio.addEventListener('change', autoCalculateIfReady);
+            // Make radio option divs handle all clicks
+            document.querySelectorAll('.radio-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        updateSenioritySelection(radio.value);
+                    }
+                });
             });
         });
     </script>
